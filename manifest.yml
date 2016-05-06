@@ -1,0 +1,8 @@
+---
+env:
+  NODE_ENV: production
+
+applications:
+- name: lambda-task
+  buildpack: https://github.com/cloudfoundry/buildpack-nodejs.git
+  command: node index.js
