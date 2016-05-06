@@ -5,14 +5,17 @@ class MyEmitter extends EventEmitter {}
 const myEmitter = new MyEmitter();
 const concat = require('concat-stream');
 
-app.get('/task', function (req, res) {
-    myEmitter.once('task', (a) => {
+app.get('/task/:id', function (req, res) {
+    const eventName = 'task-' + req.params.id;
+    myEmitter.once(eventName, (a) => {
+        console.log(eventName);
         res.send(a);
     })
 });
-app.post('/task', function (req, res) {
+app.post('/task/:id', function (req, res) {
+    const eventName = 'task-' + req.params.id;
     req.pipe(concat(function(data){
-        myEmitter.emit('task', data);
+        myEmitter.emit(eventName, data);
         res.send('OK');
     }));
 });
