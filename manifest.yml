@@ -1,7 +1,7 @@
 ---
 env:
   NODE_ENV: production
-  API_HOST: api.local.pcfdev.io
+  API_HOST: http://api.local.pcfdev.io
 
 applications:
 - name: lambda-task
