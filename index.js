@@ -1,6 +1,6 @@
 const express = require('express');
 const EventEmitter = require('events');
-const rest = require('restler');
+const fetch = require('node-fetch');
 const concat = require('concat-stream');
 const uuid = require('uuid4');
 const appEnv = require('cfenv').getAppEnv();
@@ -25,24 +25,26 @@ app.get('/apps/:appGuid/:dropletGuid/:command', function (req, res) {
     };
     myEmitter.once(eventName, resSend);
 
-    rest.post(`http://${API_HOST}/v3/apps/${appGuid}/tasks`, {
-        data: {
+    fetch(`${API_HOST}/v3/apps/${appGuid}/tasks`, {
+        method: 'POST',
+        body: JSON.stringify({
             droplet_guid: dropletGuid,
             name: eventName,
             command: `(${command}) | curl ${APP_URL}/task/${id} -d @- -H 'Content-Type: text/plain' --insecure`
-        },
+        }),
         headers: {
+            'Content-Type':'application/json',
             Authorization: req.get('Authorization')
         }
-    }).on('complete', function(data, response) {
-        if (response.statusCode == 202) {
-            console.log(`Task Guid is ${data.guid}`);
-        } else {
-            res.send('ERROR');
-            myEmitter.removeListener(eventName, resSend);
-            return;
-        }
-    });
+    }).
+    then(res => res.json()).
+    then(data => console.log(`Task Guid is ${data.guid}`)).
+    catch(e => {
+        console.log(e);
+        res.send('ERROR');
+        myEmitter.removeListener(eventName, resSend);
+        return;
+    })
 });
 app.post('/task/:id', function (req, res) {
     const eventName = `task-${req.params.id}`;

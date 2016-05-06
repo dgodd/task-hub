@@ -19,7 +19,6 @@
     "form-data": "^1.0.0-rc4",
     "node-fetch": "^1.5.2",
     "node-zip": "^1.1.1",
-    "restler": "^3.4.0",
     "uuid4": "^1.0.0"
   }
 }
