@@ -3,17 +3,20 @@ const EventEmitter = require('events');
 const rest = require('restler');
 const concat = require('concat-stream');
 const uuid = require('uuid4');
+const appEnv = require('cfenv').getAppEnv();
 
 const app = express();
 class MyEmitter extends EventEmitter {}
 const myEmitter = new MyEmitter();
+
+const API_HOST = process.env.API_HOST || 'api.local.pcfdev.io';
+const APP_URL = appEnv.url;
 
 // const appGuid = 'f358d7cc-b29c-4d35-97c8-045f56901247';
 // const dropletGuid = 'a9b47ec3-d120-45a5-9ebc-9e891e40224a';
 // const command = 'ruby ./hello.rb';
 // time curl -i 'lambda-task.local.pcfdev.io/apps/f358d7cc-b29c-4d35-97c8-045f56901247/a9b47ec3-d120-45a5-9ebc-9e891e40224a/ruby%20hello.rb' -H "Authorization: `cf oauth-token`"
 
-// app.get('/task', function (req, res) {
 app.get('/apps/:appGuid/:dropletGuid/:command', function (req, res) {
     if(!req.get('Authorization')) { res.send('Authorization required'); return }
     const id = uuid();
@@ -27,11 +30,11 @@ app.get('/apps/:appGuid/:dropletGuid/:command', function (req, res) {
     };
     myEmitter.once(eventName, resSend);
 
-    rest.post(`http://api.local.pcfdev.io/v3/apps/${appGuid}/tasks`, {
+    rest.post(`http://${API_HOST}/v3/apps/${appGuid}/tasks`, {
         data: {
             droplet_guid: dropletGuid,
             name: eventName,
-            command: `(${command}) | curl lambda-task.local.pcfdev.io/task/${id} -d @- -H 'Content-Type: text/plain'`
+            command: `(${command}) | curl ${APP_URL}/task/${id} -d @- -H 'Content-Type: text/plain' --insecure`
         },
         headers: {
             Authorization: req.get('Authorization')
@@ -56,7 +59,6 @@ app.post('/task/:id', function (req, res) {
     }));
 });
 
-const port = process.env.PORT || 8000;
-app.listen(port, function () {
-    console.log(`Example app listening on port ${port}!`);
+app.listen(appEnv.port, function () {
+    console.log(`Example app listening on port ${appEnv.port}!`);
 });
