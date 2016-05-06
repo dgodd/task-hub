@@ -4,7 +4,7 @@
 
 Login to CF (the defaults are for PCFDEV). Then push the TaskHub app.
 
-`git push`
+`cf push`
 
 ## Edit the files in the app directoy
 
