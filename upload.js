@@ -3,11 +3,13 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
+const uuid = require('uuid4');
 const Zip = new require('node-zip');
 const API_HOST = process.env.API_HOST || 'http://api.local.pcfdev.io';
 const SPACE_NAME = process.env.SPACE_NAME;
 const DROPLET_APP_NAME = process.env.DROPLET_APP_NAME || 'lambda-hello2';
 const HUB_HOST = process.env.HUB_HOST || 'http://lambda-task.local.pcfdev.io';
+const APP_DIRECTORY = process.env.APP_DIRECTORY || './app';
 var headers = {};
 var guids = {};
 
@@ -28,15 +30,15 @@ const doUpload = () => {
         then((res) => guids.package = res.guid).
         then(() => {
             zip = Zip();
-            // zip.file('hello.rb', "#!/usr/bin/env ruby\n\nputs 'Hi Mom'\n");
-            const files = fs.readdirSync('./app_ruby/');
+            const files = fs.readdirSync(APP_DIRECTORY);
             console.log(files);
             for (var file of files) {
-                zip.file(file, fs.readFileSync(path.join('./app_ruby/', file)));
+                zip.file(file, fs.readFileSync(path.join(APP_DIRECTORY, file)));
             }
             const zipData = zip.generate({base64:false,compression:'DEFLATE'});
-            fs.writeFileSync('test.zip', zipData, 'binary');
-            return fs.readFileSync('test.zip');
+            const tmpFile = `/tmp/${uuid()}.zip`;
+            fs.writeFileSync(tmpFile, zipData, 'binary');
+            return fs.readFileSync(tmpFile);
         }).
         then(zipData => {
             var form = new FormData();
