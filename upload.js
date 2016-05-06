@@ -6,8 +6,8 @@ const assert = require('assert');
 const uuid = require('uuid4');
 const Zip = new require('node-zip');
 const API_HOST = process.env.API_HOST || 'http://api.local.pcfdev.io';
-const SPACE_NAME = process.env.SPACE_NAME;
-const DROPLET_APP_NAME = process.env.DROPLET_APP_NAME || 'lambda-hello2';
+const SPACE_NAME = process.env.SPACE_NAME || 'pcfdev-space';
+const DROPLET_APP_NAME = process.env.DROPLET_APP_NAME || `task-hub-${uuid()}`;
 const HUB_HOST = process.env.HUB_HOST || 'http://lambda-task.local.pcfdev.io';
 const APP_DIRECTORY = process.env.APP_DIRECTORY || './app';
 var headers = {};
@@ -23,15 +23,29 @@ var zip = new require('node-zip')();
 zip.file('test.file', 'hello there');
 var data = zip.generate({base64:false,compression:'DEFLATE'});
 const doUpload = () => {
-    fetch('/v3/apps').
-        // FIXME - Create app if not exist
-        then(json => guids.app = json.resources.find((r) => r.name == DROPLET_APP_NAME).guid).
+    fetch('/v2/spaces').
+        then(json => guids.space = json.resources.find((r) => r.entity.name == SPACE_NAME).metadata.guid).
+        then(() => fetch(`/v3/apps`, { method: 'POST', body: JSON.stringify({
+            name: DROPLET_APP_NAME,
+            environment_variables: {},
+            lifecycle: {
+                type: "buildpack",
+                data: {
+                    buildpack: "ruby_buildpack"
+                }
+            },
+            relationships: {
+                space: {
+                    guid: guids.space
+                }
+            }
+        }), headers: {'Content-Type':'application/json' }})).
+        then(res => guids.app = res.guid).
         then(() => fetch(`/v3/apps/${guids.app}/packages`, { method: 'POST', body: JSON.stringify({type: 'bits'}), headers: {'Content-Type':'application/json' }})).
         then((res) => guids.package = res.guid).
         then(() => {
             zip = Zip();
             const files = fs.readdirSync(APP_DIRECTORY);
-            console.log(files);
             for (var file of files) {
                 zip.file(file, fs.readFileSync(path.join(APP_DIRECTORY, file)));
             }
