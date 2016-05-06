@@ -12,11 +12,6 @@ const myEmitter = new MyEmitter();
 const API_HOST = process.env.API_HOST || 'api.local.pcfdev.io';
 const APP_URL = appEnv.url;
 
-// const appGuid = 'f358d7cc-b29c-4d35-97c8-045f56901247';
-// const dropletGuid = 'a9b47ec3-d120-45a5-9ebc-9e891e40224a';
-// const command = 'ruby ./hello.rb';
-// time curl -i 'lambda-task.local.pcfdev.io/apps/f358d7cc-b29c-4d35-97c8-045f56901247/a9b47ec3-d120-45a5-9ebc-9e891e40224a/ruby%20hello.rb' -H "Authorization: `cf oauth-token`"
-
 app.get('/apps/:appGuid/:dropletGuid/:command', function (req, res) {
     if(!req.get('Authorization')) { res.send('Authorization required'); return }
     const id = uuid();

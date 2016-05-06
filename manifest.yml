@@ -4,6 +4,6 @@ env:
   API_HOST: http://api.local.pcfdev.io
 
 applications:
-- name: lambda-task
+- name: task-hub
   buildpack: https://github.com/cloudfoundry/buildpack-nodejs.git
   command: node index.js
